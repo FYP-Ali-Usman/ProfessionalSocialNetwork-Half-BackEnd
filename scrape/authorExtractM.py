@@ -130,7 +130,7 @@ def completeProfileSouceUrl(linkk):
 
 
 # getting coauthers method called below
-def getCoauthInfo(tileLi, name):
+def getCoauthInfo(tileLi, namee):
     soursou = ''
 
     while True:
@@ -174,10 +174,10 @@ def getCoauthInfo(tileLi, name):
         for coauth in span:
             llll = coauth.find_element_by_tag_name('a')
 
-            if llll.text.strip() != name:
+            if llll.text.strip() != namee:
                 ddd['name'] = llll.text.strip()
                 ddd['linkUrl'] = llll.get_attribute('href')
-            coauthors.append(ddd.copy())
+                coauthors.append(ddd.copy())
 
     except NoSuchElementException:
         print('can not find "show more" button.')

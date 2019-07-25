@@ -17,7 +17,7 @@ network = {
     'publications': []
 }
 
-returnCopy = {
+FullCopy = {
     'organization': '',
     'authors': [
         {
@@ -31,7 +31,7 @@ returnCopy = {
             'totalCitation': ''
         }
     ],
-    'publications' :[
+    'publications': [
         {
             '_id': '',
             'title': '',
@@ -50,20 +50,50 @@ returnCopy = {
     ]
 }
 
-# Create your views here.
+returnCopy = {
+    'organization': '',
+    'nodes': [
+        {
+            'id': '',
+            'name': '',
+            'group': 0,
+            'urlLink': '',
+            'affiliation': '',
+            'researchInterest': [],
+            'totalPaper': '',
+            'totalCoAuthor': '',
+            'totalCitation': ''
+        }
+    ],
+    'links': [
+        {
+            'source': '',
+            'target': '',
+            'value': 0,
+            'title': '',
+            'year': '',
+            'overview': '',
+            'catogories': [],
+            'papaerLink': ''
+        }
+    ]
+}
+
 def generateNetwork(org):
-    #extract the data and fill both network and the returnCopy
+    #extract the data and fill both network and the FullCopy
     #save the network only
 
-    returnCopy['organization'] = org
+    FullCopy['organization'] = org
     network['organization'] = org
     for x in authorCol.find({'affiliation': org}):
-        returnCopy['authors'].append(x)
+        FullCopy['authors'].append(x)
         network['authors'].append(x['_id'])
         for j in pubCol.find({'author': x['_id']}):
-            returnCopy['publications'].append(j)
+            FullCopy['publications'].append(j)
             network['publications'].append(j['_id'])
     networkCol.save(network)
+
+# Create your views here.
 
 def develop(request):
     if request.method == 'POST':
@@ -84,15 +114,113 @@ def develop(request):
         else:
             print('{0} {1}'.format(finding.count(), ' records found.'))
 
-        if returnCopy['organization'] == '':
+        if FullCopy['organization'] == '':
             print("return copy is empty")
 
             for x in finding:
-                returnCopy['organization'] = x['organization']
+                FullCopy['organization'] = x['organization']
                 for j in x['authors']:
-                    returnCopy['authors'].append(authorCol.find_one({'_id': j}))
+                    FullCopy['authors'].append(authorCol.find_one({'_id': j}))
                 for j in x['publications']:
-                    returnCopy['publications'].append(pubCol.find_one({'_id': j}))
+                    FullCopy['publications'].append(pubCol.find_one({'_id': j}))
+
+        print("calling fillReturnCopy")
+
+        ############### Code for filling the return copy ###################
+
+        returnCopy['organization'] = FullCopy['organization']
+        idx = 0
+        idx1 = 0
+        tempLinks = []
+        tempIds = []
+        # for idx, j in enumerate(FullCopy['authors']):
+        for j in FullCopy['authors'][1:]:
+            tempNodes = {
+                'id': '',
+                'name': '',
+                'group': 0,
+                'urlLink': '',
+                'affiliation': '',
+                'researchInterest': [],
+                'totalPaper': '',
+                'totalCoAuthor': '',
+                'totalCitation': ''
+            }
+
+            tempNodes['id'] = str(j['_id'])
+            tempNodes['name'] = j['Name']
+            tempNodes['group'] = 1
+            tempNodes['urlLink'] = j['urlLink']
+            tempNodes['affiliation'] = j['affiliation']
+            tempNodes['researchInterest'] = j['researchInterest']
+            tempNodes['totalPaper'] = j['totalPaper']
+            tempNodes['totalCoAuthor'] = j['totalCoAuthor']
+            tempNodes['totalCitation'] = j['totalCitation']
+            # print(tempNodes)
+            returnCopy['nodes'].append(tempNodes)
+            # print(returnCopy['nodes'][-1])
+
+            idx += 1
+            tempLinks.append(j['urlLink'])
+            tempIds.append(j['_id'])
+        idx += 1
+        returnCopy['nodes'].pop(0)
+        # print(returnCopy['nodes'])
+
+        for j in FullCopy['publications'][1:]:
+            for k in j['coAuthors']:
+                tempNodes = {
+                    'id': '',
+                    'name': '',
+                    'group': 0,
+                    'urlLink': '',
+                    'affiliation': '',
+                    'researchInterest': [],
+                    'totalPaper': '',
+                    'totalCoAuthor': '',
+                    'totalCitation': ''
+                }
+                tempLinksNodes = {
+                    'source': '',
+                    'target': '',
+                    'value': 0,
+                    'title': '',
+                    'year': '',
+                    'overview': '',
+                    'catogories': [],
+                    'papaerLink': ''
+                }
+
+                tempLinksNodes['value'] = 1
+                tempLinksNodes['title'] = j['title']
+                tempLinksNodes['year'] = j['year']
+                tempLinksNodes['overview'] = j['overview']
+                tempLinksNodes['catogories'] = j['catogories']
+                tempLinksNodes['papaerLink'] = j['papaerLink']
+                tempLinksNodes['source'] = str(j['author'])
+
+                if k['linkUrl'] not in tempLinks:
+                    tempNodes['id'] = str(idx1) + str(idx1) + str(idx1)
+                    tempNodes['name'] = k['name']
+                    tempNodes['group'] = 0
+                    tempNodes['urlLink'] = k['linkUrl']
+                    returnCopy['nodes'].append(tempNodes)
+
+                    tempLinks.append(k['linkUrl'])
+                    tempIds.append(tempNodes['id'])
+                    tempLinksNodes['target'] = tempNodes['id']
+
+                else:
+                    idx2 = tempLinks.index(k['linkUrl'])
+                    tempLinksNodes['target'] = tempIds[idx2]
+
+                returnCopy['links'].append(tempLinksNodes)
+
+                idx1 += 1
+                idx += 1
+        returnCopy['links'].pop(0)
+
+        ############### Code for filling the return copy ends here ###################
 
         page_sanitized = json.loads(json_util.dumps(returnCopy))
         return JsonResponse(page_sanitized)
