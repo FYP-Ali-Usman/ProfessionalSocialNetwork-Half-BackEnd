@@ -444,6 +444,9 @@ def develop(request):
                 'eigenvectorCentrality': 0
             }
 
+            if j == None:
+                continue
+
             tempNodes['id'] = str(j['_id'])
             tempNodes['name'] = j['Name']
             tempNodes['group'] = 1
@@ -466,6 +469,10 @@ def develop(request):
 
         for j in FullCopy['publications'][1:]:
             #an array to check duplicate coauthors (a previous programming mistake was corrected so this part of code is not needed actually)
+
+            if j == None:
+                continue
+
             duplicateCoauhthorCheck = []
             for k in j['coAuthors']:
                 if k['name'] == '' and k['linkUrl'] == '' or k['linkUrl'] in duplicateCoauhthorCheck:
@@ -576,7 +583,8 @@ def develop(request):
                 #edit network tempid author
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
-                        j['coauthors'].append(i['target'])
+                        if i['target'] not in j['coauthors']:
+                            j['coauthors'].append(i['target'])
                         j['relations'].append(temprelation)
                         break
 
@@ -584,7 +592,8 @@ def develop(request):
                 #edit network tempid coauthor
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
-                        j['authors'].append(i['source'])
+                        if i['source'] not in j['authors']:
+                            j['authors'].append(i['source'])
                         j['relations'].append(temprelation)
                         break
 
@@ -665,18 +674,33 @@ def develop(request):
             # https://stackoverflow.com/questions/33469897/dfs-to-implement-a-graph-python
 
             graph = {}
+
             for j in totalNodes:
-                connections = []
-                for k in i['relations']:
-                    if k['a_id'] == j:
-                        connections.append(k['ca_id'])
-                    elif k['ca_id'] == j:
-                        connections.append(k['a_id'])
-                graph.update({j:connections})
+                graph[j] = []
+
+            for j in i['relations']:
+                if j['a_id'] not in graph[j['ca_id']]:
+                    graph[j['ca_id']].append(j['a_id'])
+                if j['ca_id'] not in graph[j['a_id']]:
+                    graph[j['a_id']].append(j['ca_id'])
+
+
+            # for j in totalNodes:
+            #     connections = []
+            #     for k in i['relations']:
+            #         if k['a_id'] == j:
+            #             connections.append(k['ca_id'])
+            #         elif k['ca_id'] == j:
+            #             connections.append(k['a_id'])
+            #     graph.update({j:connections})
 
             allShortestPaths = [] # all shortest paths between 2 nodes
             noOfShortestPaths = [] # e.g first element is 2 then first 2 lists in allShortestPaths are between same nodes
-            # for j in totalNodes:
+            
+            uniqueStartNode = []
+            uniqueEndNode = []
+            uniqueResults = []
+
             for idx3, j in enumerate(totalNodes[:-1:]):
                 currentStartNode = j
                 sumOfDistanceOfAllNodesFromJ = 0
@@ -684,13 +708,28 @@ def develop(request):
 
                 # find shortes path from j to j+1 and others except with itself
                 # for k in totalNodes[totalNodes.index(j)+1::]: # .index takes very muct time to execute
-                for k in totalNodes[idx3+1::]:
+                # for k in totalNodes[idx3+1::]:
+                for k in totalNodes[::]:
+                    if k == j:
+                        continue
+
                     currentEndNode = k
 
                     #find all paths from j to k
                     result = []
 
-                    dfs(graph, currentStartNode, currentEndNode, [], result)
+                    for l, ll in enumerate(uniqueStartNode[::]):
+                        if ll == currentStartNode and uniqueEndNode[l] == currentEndNode:
+                            result = uniqueResults[l]
+                        elif ll == currentEndNode and uniqueEndNode[l] == currentStartNode:
+                            result = uniqueResults[l]
+
+                    if not result:
+                        uniqueStartNode.append(currentStartNode)
+                        uniqueEndNode.append(currentEndNode)
+                        dfs(graph, currentStartNode, currentEndNode, [], result)
+                        uniqueResults.append(result)
+                    # sleep(0.25)
                     # print(result)
 
                     distances = []
@@ -718,7 +757,7 @@ def develop(request):
 
                 # print(sumOfDistanceOfAllNodesFromJ)
                 try:
-                    closenessCentralityOfJ = (len(totalNodes)-1)/sumOfDistanceOfAllNodesFromJ
+                    closenessCentralityOfJ = sumOfDistanceOfAllNodesFromJ/(len(totalNodes)-1)
                 except:
                     # print('End of a Subnetwork {}'.format(i['authors']))
                     pass
@@ -987,6 +1026,17 @@ def entity(request):
 
         ######## starts the code of the filling of newArrangement ########
 
+        # following dictionary will save source and targets to see if the start and end nodes don't have any node between them then no needd to calculate path by doing recursion.
+        # directPathHelper = {}
+
+        # sourceList = []
+        # targetList = []
+        #
+        # for i in authorReturnCopy['links']:
+        #     # directPathHelper[i['source']] = i['target']
+        #     sourceList.append(i['source'])
+        #     targetList.append(i['target'])
+
         # iter = 0
         newArrangement['subNetworks'].pop()
         # for i in authorReturnCopy['links'][112::]:
@@ -1201,6 +1251,25 @@ def entity(request):
                     currentEndNode = k
                     result = []
 
+                    # print(directPathHelper)
+                    # if currentStartNode in directPathHelper.keys():
+                    #     if currentEndNode == directPathHelper[currentStartNode]:
+                    #         # result = [[currentStartNode, currentEndNode]]
+                    #         result.append([currentStartNode, currentEndNode])
+                    # elif currentStartNode in directPathHelper.values():
+                    #     for sourcee, targett in directPathHelper.items():
+                    #         if sourcee == currentEndNode and targett == currentStartNode:
+                    #             result.append([currentEndNode, currentStartNode])
+                    #             # result = [[currentEndNode, currentStartNode]]
+
+                    # if currentStartNode in sourceList:
+                    #     if currentEndNode == targetList[sourceList.index(currentStartNode)]:
+                    #         result = [[currentStartNode, currentEndNode]]
+                    # elif currentStartNode in targetList:
+                    #     if currentEndNode == sourceList[targetList.index(currentStartNode)]:
+                    #         result = [[currentEndNode, currentStartNode]]
+                    #
+                    # else:
                     for l, ll in enumerate(uniqueStartNode[::]):
                         if ll == currentStartNode and uniqueEndNode[l] == currentEndNode:
                             result = uniqueResults[l]
@@ -1213,8 +1282,9 @@ def entity(request):
                         dfs(graph, currentStartNode, currentEndNode, [], result)
                         uniqueResults.append(result)
                     # sleep(0.25)
-                    # print(result)
+                    print(result)
 
+                    sleep(0.5)
                     distances = []
                     shortestDistance = 0
                     noOfShortestDistances = 0
