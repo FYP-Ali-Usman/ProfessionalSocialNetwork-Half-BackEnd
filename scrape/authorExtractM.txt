@@ -2,6 +2,7 @@ from selenium.common.exceptions import NoSuchElementException, ElementClickInter
     StaleElementReferenceException
 from parsel import Selector
 import math
+from time import sleep
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
@@ -10,7 +11,6 @@ import urllib.request
 import urllib.parse
 import pymongo
 from datetime import datetime
-from time import sleep
 
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
@@ -64,7 +64,6 @@ def closeBrowserInstances():
 def authProfileGet(startSearch):
     a = nameTo.lower()
     print(a)
-    # print(startSearch)
     soup = BeautifulSoup(str(startSearch), 'html.parser')
     try:
         name = soup.find_all('a', {'class': 'au-target', 'aria-label': 'Name',
@@ -82,18 +81,8 @@ def authProfileGet(startSearch):
             # authProfile['Name'] = names.get_text().strip()
             # authList.append(authProfile)
             # print(url)
-
-            if authorCol.find({'urlLink': url}).count() < 1:
-                scrapProfile(url)
-                UrlsAuth.append(url)
-            else:
-                # TODO write this in the scrapProfile, see if the totalPapers are less than records in our db then delete the old ones and scrap new or scrap from the next those are left
-                for oldAuthor in authorCol.find({'urlLink': url}):
-                    oldAuthorId = oldAuthor['_id']
-                    if pubCol.find({'author': oldAuthorId}).count() < 1:
-                        scrapProfile(url)
-                        UrlsAuth.append(url)
-
+            scrapProfile(url)
+            UrlsAuth.append(url)
     print(UrlsAuth)
     print(len(UrlsAuth))
 
@@ -107,21 +96,23 @@ def getAuthInfoLink(name, university):
     url = 'https://academic.microsoft.com/search?q=' + newUrl + '&f=&orderBy=0&skip=0&take=10'
     while True:
         try:
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            print("Staring time of getting author Info =", current_time)
+            # now = datetime.now()
+            # current_time = now.strftime("%H:%M:%S")
+            # print("Current Time =", current_time)
 
             driver.get(url)
-            wait = True
-            while wait:
-                if driver.page_source != '':
-                    wait = False
+            # TODO any way cancelation of the sleeptimes once if(startSear != empty)
 
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            print("Ending time of getting author Info =", current_time)
+            # while True:
+            #     if driver.page_source != '':
+            #         break
+            # 
+            # now = datetime.now()
+            # current_time = now.strftime("%H:%M:%S")
+            # print("Current Time =", current_time)
 
-            sleep(4)
+            sleep(5)
+            # print(driver.page_source)
             startSear = driver.page_source
         except TimeoutException as ex:
             print('internet is slow, error occured in searching author, trying again')
@@ -142,21 +133,9 @@ def getAuthInfoLink(name, university):
 def completeProfileSouceUrl(linkk):
     while True:
         try:
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            print("Staring time of getting profile source =", current_time)
-
             driver.get(linkk)
-            wait = True
-            while wait:
-                if driver.page_source != '':
-                    wait = False
-
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            print("Ending time of getting profile source =", current_time)
-
-            sleep(4)
+            sleep(10)
+            # print(driver.page_source)
             return driver.page_source
         except TimeoutException as ex:
             print('internet is slow, error occured in getting profile url, trying again')
@@ -173,21 +152,9 @@ def getCoauthInfo(tileLi, namee):
 
     while True:
         try:
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            print("Staring time of getting coauthor Info =", current_time)
-
             newCoauthDriver.get(tileLi)
-            wait = True
-            while wait:
-                if newCoauthDriver.page_source != '':
-                    wait = False
-
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            print("Ending time of getting coauthor Info =", current_time)
-
-            sleep(4)
+            sleep(10)
+            # print(newCoauthDriver.page_source)
             soursou = newCoauthDriver.page_source
         except TimeoutException as ex:
             print('internet is slow, error occured in searching publication, trying again')
@@ -206,22 +173,8 @@ def getCoauthInfo(tileLi, namee):
             try:
                 # newCoauthDriver.find_element_by_xpath('//*[@au-target-id="215"]')
                 moreButton = newCoauthDriver.find_element_by_xpath('//*[@class="au-target show-more"]')
-
-                now = datetime.now()
-                current_time = now.strftime("%H:%M:%S")
-                print("Staring time of getting more button data of coauthor =", current_time)
-
                 moreButton.click()
-                wait = True
-                while wait:
-                    if newCoauthDriver.page_source != '':
-                        wait = False
-
-                now = datetime.now()
-                current_time = now.strftime("%H:%M:%S")
-                print("Ending time of getting more button data of coauthor =", current_time)
-
-                sleep(3)
+                sleep(10)
             except NoSuchElementException:
                 print('retrying to click "see more button"')
                 if staleCounter >= 5:
@@ -370,22 +323,8 @@ def scrapProfile(lliik):
             nextButton = driver.find_element_by_xpath('//*[@aria-label="Next page"]')
         except NoSuchElementException:
             return None
-
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        print("Staring time of getting next button data =", current_time)
-
         nextButton.click()
-        wait = True
-        while wait:
-            if driver.page_source != '':
-                wait = False
-
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        print("Ending time of getting next button data =", current_time)
-
-        sleep(3)
+        sleep(15)
         soursou = driver.page_source
 
         #######authgors

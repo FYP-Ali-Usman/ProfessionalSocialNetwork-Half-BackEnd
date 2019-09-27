@@ -5,8 +5,6 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework.parsers import JSONParser
 import random
-from time import sleep
-import pprint
 
 myclient = pymongo.MongoClient("localhost", 27017)
 mydb = myclient["Fyp"]
@@ -1029,8 +1027,7 @@ def entity(request):
                 #edit network tempid author
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
-                        if i['target'] not in j['coauthors']:
-                            j['coauthors'].append(i['target'])
+                        j['coauthors'].append(i['target'])
                         j['relations'].append(temprelation)
                         break
 
@@ -1038,8 +1035,7 @@ def entity(request):
                 #edit network tempid coauthor
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
-                        if i['source'] not in j['authors']:
-                            j['authors'].append(i['source'])
+                        j['authors'].append(i['source'])
                         j['relations'].append(temprelation)
                         break
 
@@ -1057,18 +1053,6 @@ def entity(request):
         # print(newArrangement)
 
         ######## ends the code of the filling of newArrangement ########
-
-        # following 10 lines of code checks for the duplicate enteries in the development environment
-
-        # duplicateCheck = []
-        # for i in newArrangement['subNetworks']:
-        #     duplicateCheck = i['authors'] + i['coauthors']
-        #     print(len(duplicateCheck))
-        #     print(len(set(duplicateCheck)))
-        #     if (len(duplicateCheck) != len(set(duplicateCheck))):
-        #         print('duplicate')
-        #     else:
-        #         print('no duplicate')
 
         ######### code for the degree cardanility calculation starts here #########
 
@@ -1120,10 +1104,6 @@ def entity(request):
         for i in newArrangement['subNetworks']:
 
             totalNodes = i['authors'] + i['coauthors']
-            # if (len(totalNodes) != len(set(totalNodes))):
-            #     print('total nodes: {}, duplicate'.format(len(totalNodes)))
-            # else:
-            #     print('total nodes: {},  no duplicate'.format(len(totalNodes)))
 
             # Below 4 lines descript my method but I found stackoverflow method more interesting
 
@@ -1136,83 +1116,32 @@ def entity(request):
             # https://stackoverflow.com/questions/33469897/dfs-to-implement-a-graph-python
 
             graph = {}
-            # for j in totalNodes:
-            #     connections = []
-            #     for k in i['relations']:
-            #         if k['a_id'] == j:
-            #             connections.append(k['ca_id'])
-            #         elif k['ca_id'] == j:
-            #             connections.append(k['a_id'])
-            #     graph.update({j:connections})
-
-            # graph example = {
-            #   'A': ['B', 'C'],
-            #   'B': ['A'],
-            #   'C': ['A', 'D'],
-            #   'D': ['C']
-
             for j in totalNodes:
-                graph[j] = []
-
-            for j in i['relations']:
-                if j['a_id'] not in graph[j['ca_id']]:
-                    graph[j['ca_id']].append(j['a_id'])
-                if j['ca_id'] not in graph[j['a_id']]:
-                    graph[j['a_id']].append(j['ca_id'])
-            # print(len(graph))
-
-            # for j in totalNodes:
-            #     connections = []
-            #     for k in i['relations']:
-            #         if k['a_id'] == j: # if the person in j is an author
-            #             if k['ca_id'] not in connections:
-            #                 connections.append(k['ca_id'])
-            #         elif k['ca_id'] == j:
-            #             if k['a_id'] not in connections: # if the person in j is a coauthor
-            #                 connections.append(k['a_id'])
-            #     graph.update({j:connections})
+                connections = []
+                for k in i['relations']:
+                    if k['a_id'] == j:
+                        connections.append(k['ca_id'])
+                    elif k['ca_id'] == j:
+                        connections.append(k['a_id'])
+                graph.update({j:connections})
 
             allShortestPaths = [] # all shortest paths between 2 nodes
             noOfShortestPaths = [] # e.g first element is 2 then first 2 lists in allShortestPaths are between same nodes
-
-            # pprint.pprint(graph)
-            # print(graph)
-
-            uniqueStartNode = []
-            uniqueEndNode = []
-            uniqueResults = []
-            # print(totalNodes)
-
+            # for j in totalNodes:
             for idx3, j in enumerate(totalNodes[:-1:]):
                 currentStartNode = j
                 sumOfDistanceOfAllNodesFromJ = 0
                 closenessCentralityOfJ = 0
 
-                print('Path from node: {} ({}/{})'.format(j, idx3, len(totalNodes)))
-
-
                 # find shortes path from j to j+1 and others except with itself
-                # for k in totalNodes[totalNodes.index(j)+1::]: # .index takes very much time to execute
-                # for k in totalNodes[idx3+1::]:
-                for k in totalNodes[::]:
-                    if k == j:
-                        continue
-
+                # for k in totalNodes[totalNodes.index(j)+1::]: # .index takes very muct time to execute
+                for k in totalNodes[idx3+1::]:
                     currentEndNode = k
+
+                    #find all paths from j to k
                     result = []
 
-                    for l, ll in enumerate(uniqueStartNode[::]):
-                        if ll == currentStartNode and uniqueEndNode[l] == currentEndNode:
-                            result = uniqueResults[l]
-                        elif ll == currentEndNode and uniqueEndNode[l] == currentStartNode:
-                            result = uniqueResults[l]
-
-                    if not result:
-                        uniqueStartNode.append(currentStartNode)
-                        uniqueEndNode.append(currentEndNode)
-                        dfs(graph, currentStartNode, currentEndNode, [], result)
-                        uniqueResults.append(result)
-                    # sleep(0.25)
+                    dfs(graph, currentStartNode, currentEndNode, [], result)
                     # print(result)
 
                     distances = []
@@ -1240,7 +1169,7 @@ def entity(request):
 
                 # print(sumOfDistanceOfAllNodesFromJ)
                 try:
-                    closenessCentralityOfJ = sumOfDistanceOfAllNodesFromJ/(len(totalNodes)-1)
+                    closenessCentralityOfJ = (len(totalNodes)-1)/sumOfDistanceOfAllNodesFromJ
                 except:
                     # print('End of a Subnetwork {}'.format(i['authors']))
                     pass
