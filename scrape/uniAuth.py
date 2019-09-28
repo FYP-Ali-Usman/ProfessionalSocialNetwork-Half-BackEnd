@@ -17,7 +17,9 @@ academic_departments = [x.lower() for x in academic_departments]
 
 # myclient = pymongo.MongoClient("localhost", 27017)
 # mydb = myclient["Fyp"]
+# authorCol = mydb["Authors"]
 # uniUrl = mydb["universities"]
+
 #loading and matching dict
 def load_words():
     with open("../English_words.txt") as word_file:
@@ -272,7 +274,7 @@ def getAuthInfoLink(url, name, advanced = False):
     finalreqlist = finalreqlist[:finallength - 90:1]
     # print(finalseqlist)
 
-
+    # TODO we can improve this dynamic scraping, if we keep record of finalreqlist before and after the records in our database, we can see which words it didn't consider name and we can add them in our exclusion list
 
     for i in finalreqlist:
         if finalseqlist[finalreqlist.index(i)] == 'title':

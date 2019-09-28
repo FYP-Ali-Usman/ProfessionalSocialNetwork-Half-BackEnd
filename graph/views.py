@@ -142,7 +142,8 @@ authorReturnCopy = {
             'degreeCentrality': 0,
             'closenessCentrality': 0,
             'betweennessCentrality': 0,
-            'eigenvectorCentrality': 0
+            'eigenvectorCentrality': 0,
+            'level': 0
         }
     ],
     'links': [
@@ -170,8 +171,8 @@ newArrangement = {
             'coauthors': [],
             'relations': [
                 {
-                    'a_id' : '',
-                    'ca_id' : '',
+                    'a_id': '',
+                    'ca_id': '',
                     'distance': 0
                 }
             ]
@@ -181,9 +182,9 @@ newArrangement = {
 
 totalUniqueAuthors = []
 
+
 # generate the network of organization
 def generateNetwork(org):
-
     # empty the objects before precessing
 
     network['organization'] = ''
@@ -220,8 +221,8 @@ def generateNetwork(org):
         }
     ]
 
-    #extract the data and fill both network and the FullCopy
-    #save the network only
+    # extract the data and fill both network and the FullCopy
+    # save the network only
 
     FullCopy['organization'] = org
     network['organization'] = org
@@ -233,10 +234,9 @@ def generateNetwork(org):
             network['publications'].append(j['_id'])
     networkCol.save(network)
 
+
 # generate the network of author
 def generateAuthorNetwork(personURL, org):
-
-
     # empty the objects before precessing
 
     authorFullCopy['author'] = ''
@@ -312,7 +312,8 @@ def generateAuthorNetwork(personURL, org):
                     for l in pubCol.find({"coAuthors.name": k['name'], "coAuthors.linkUrl": k['linkUrl']}):
                         if l != j:
                             authorFullCopy['publications'].append(l)
-                            for m in authorCol.find({'Name': l['_id']}):  # although no need for loop as this list will contain only one element, but same case exist on many other places on this file so i stick to one way
+                            for m in authorCol.find({'Name': l[
+                                '_id']}):  # although no need for loop as this list will contain only one element, but same case exist on many other places on this file so i stick to one way
                                 if m['_id'] not in totalUniqueAuthors:
                                     totalUniqueAuthors.append(str(m['_id']))
                                 authorFullCopy['authors'].append(m)
@@ -321,7 +322,7 @@ def generateAuthorNetwork(personURL, org):
 
         for x in pubCol.find({"coAuthors.linkUrl": personURL}):
             print(authorCol.find({'_id': x['author']}).count())
-            for j in authorCol.find({'_id': x['author']}): #loop will run one time
+            for j in authorCol.find({'_id': x['author']}):  # loop will run one time
                 if j['_id'] not in totalUniqueAuthors:
                     totalUniqueAuthors.append(str(j['_id']))
                 authorFullCopy['authors'].append(j)
@@ -330,6 +331,7 @@ def generateAuthorNetwork(personURL, org):
                     authorFullCopy['publications'].append(k)
 
     # print(authorFullCopy)
+
 
 # coppied from https://stackoverflow.com/questions/33469897/dfs-to-implement-a-graph-python
 def dfs(graph, start, end, path, result):
@@ -340,6 +342,7 @@ def dfs(graph, start, end, path, result):
         for node in graph[start]:
             if node not in path:
                 dfs(graph, node, end, path[:], result)
+
 
 # Create your views here.
 
@@ -396,9 +399,9 @@ def develop(request):
         # print(data)
         # print(data['organization'])
 
-        #find if a network of that organization is already present or not
-        #if yes, return it
-        #if not, generate it then return
+        # find if a network of that organization is already present or not
+        # if yes, return it
+        # if not, generate it then return
 
         finding = networkCol.find({"organization": data['organization']})
         if finding.count() <= 0:
@@ -468,7 +471,7 @@ def develop(request):
         returnCopy['nodes'].pop(0)
 
         for j in FullCopy['publications'][1:]:
-            #an array to check duplicate coauthors (a previous programming mistake was corrected so this part of code is not needed actually)
+            # an array to check duplicate coauthors (a previous programming mistake was corrected so this part of code is not needed actually)
 
             if j == None:
                 continue
@@ -561,13 +564,13 @@ def develop(request):
                     break
 
             tempArrangement = {
-                'no_id' : 0,
-                'authors' : [],
-                'coauthors' : [],
-                'relations' : [
+                'no_id': 0,
+                'authors': [],
+                'coauthors': [],
+                'relations': [
                     {
-                        'a_id' : '',
-                        'ca_id' : '',
+                        'a_id': '',
+                        'ca_id': '',
                         'distance': 0
                     }
                 ]
@@ -580,7 +583,7 @@ def develop(request):
                 'distance': i['value']
             }
             if match == 1:
-                #edit network tempid author
+                # edit network tempid author
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
                         if i['target'] not in j['coauthors']:
@@ -589,7 +592,7 @@ def develop(request):
                         break
 
             elif match == 2:
-                #edit network tempid coauthor
+                # edit network tempid coauthor
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
                         if i['source'] not in j['authors']:
@@ -598,9 +601,9 @@ def develop(request):
                         break
 
             else:
-                #save as new network with tempid += 1
+                # save as new network with tempid += 1
 
-                tempArrangement['no_id'] = len(newArrangement['subNetworks'])+1
+                tempArrangement['no_id'] = len(newArrangement['subNetworks']) + 1
                 tempArrangement['authors'].append(i['source'])
                 tempArrangement['coauthors'].append((i['target']))
                 tempArrangement['relations'].pop()
@@ -654,10 +657,10 @@ def develop(request):
 
         ######### code for the closeness and betweenness cardanility calculation begins here #########
 
-        fullAuthorId = [] # working for closeness centrality
-        fullAuthorNumbers = [] # working for closeness centrality
-        fullCoauthorId = [] # working for betweeneness centrality
-        fullCoauthorNumbers = [] # working for betweeneness centrality
+        fullAuthorId = []  # working for closeness centrality
+        fullAuthorNumbers = []  # working for closeness centrality
+        fullCoauthorId = []  # working for betweeneness centrality
+        fullCoauthorNumbers = []  # working for betweeneness centrality
 
         for i in newArrangement['subNetworks']:
 
@@ -684,19 +687,9 @@ def develop(request):
                 if j['ca_id'] not in graph[j['a_id']]:
                     graph[j['a_id']].append(j['ca_id'])
 
+            allShortestPaths = []  # all shortest paths between 2 nodes
+            noOfShortestPaths = []  # e.g first element is 2 then first 2 lists in allShortestPaths are between same nodes
 
-            # for j in totalNodes:
-            #     connections = []
-            #     for k in i['relations']:
-            #         if k['a_id'] == j:
-            #             connections.append(k['ca_id'])
-            #         elif k['ca_id'] == j:
-            #             connections.append(k['a_id'])
-            #     graph.update({j:connections})
-
-            allShortestPaths = [] # all shortest paths between 2 nodes
-            noOfShortestPaths = [] # e.g first element is 2 then first 2 lists in allShortestPaths are between same nodes
-            
             uniqueStartNode = []
             uniqueEndNode = []
             uniqueResults = []
@@ -715,7 +708,7 @@ def develop(request):
 
                     currentEndNode = k
 
-                    #find all paths from j to k
+                    # find all paths from j to k
                     result = []
 
                     for l, ll in enumerate(uniqueStartNode[::]):
@@ -737,15 +730,15 @@ def develop(request):
                     noOfShortestDistances = 0
                     for l in result:
                         # for m in l[:len(l)-1:]:
-                        for idx4, m in enumerate(l[:len(l)-1:]):
+                        for idx4, m in enumerate(l[:len(l) - 1:]):
                             # nextM = l[l.index(m)+1]
-                            nextM = l[idx4+1] # .index takes very much execution time
+                            nextM = l[idx4 + 1]  # .index takes very much execution time
                             # distance between m and nextM
                             for o in i['relations']:
                                 if o['a_id'] == m and o['ca_id'] == nextM or o['a_id'] == nextM and o['ca_id'] == m:
                                     shortestDistance += o['distance']
                         distances.append(shortestDistance)
-                    shortestDistance = min(distances) # distance between j and k
+                    shortestDistance = min(distances)  # distance between j and k
 
                     for idx, l in enumerate(distances):
                         if l == shortestDistance:
@@ -757,7 +750,7 @@ def develop(request):
 
                 # print(sumOfDistanceOfAllNodesFromJ)
                 try:
-                    closenessCentralityOfJ = sumOfDistanceOfAllNodesFromJ/(len(totalNodes)-1)
+                    closenessCentralityOfJ = sumOfDistanceOfAllNodesFromJ / (len(totalNodes) - 1)
                 except:
                     # print('End of a Subnetwork {}'.format(i['authors']))
                     pass
@@ -769,8 +762,8 @@ def develop(request):
 
             for j in totalNodes:
                 # if '158215821582' == j:
-                    # print(allShortestPaths)
-                    # print(totalNodes)
+                # print(allShortestPaths)
+                # print(totalNodes)
 
                 betweennessOfJ = 0
                 inBetween = 0
@@ -778,7 +771,7 @@ def develop(request):
                 prevStartNode = ''
                 prevEndNode = ''
 
-                skip = True #skip due to not being in between
+                skip = True  # skip due to not being in between
                 hisAuthors = []
 
                 for k in returnCopy['links']:
@@ -803,15 +796,15 @@ def develop(request):
 
                         totalPaths += 1
 
-                        if j in k[::]: #if j in between the path
+                        if j in k[::]:  # if j in between the path
                             inBetween += 1
 
                         # if '5cd9b2314c1c3a308240f938' == j: #zaid ahmed
                         #     print('{}, {}, {}, {}'.format(k, totalPaths, inBetween, betweennessOfJ))
 
                         if startNode != prevStartNode or endNode != prevEndNode:
-                            if idx != (len(allShortestPaths)-1):
-                                betweennessOfJ = betweennessOfJ + inBetween/totalPaths
+                            if idx != (len(allShortestPaths) - 1):
+                                betweennessOfJ = betweennessOfJ + inBetween / totalPaths
                             totalPaths = 0
                             inBetween = 0
 
@@ -850,7 +843,8 @@ def entity(request):
                 'degreeCentrality': 0,
                 'closenessCentrality': 0,
                 'betweennessCentrality': 0,
-                'eigenvectorCentrality': 0
+                'eigenvectorCentrality': 0,
+                'level': 0
             }
         ]
         authorReturnCopy['links'] = [
@@ -888,16 +882,15 @@ def entity(request):
         generateAuthorNetwork(personURL, affiliation)
         # print(authorFullCopy)
 
-
         ############## Code for filling the authorReturnCopy #################
 
         authorReturnCopy['author'] = authorFullCopy['author']
         authorReturnCopy['organization'] = authorFullCopy['organization']
 
-        idx = 0 # index count
-        idx1 = 0 # index count
-        tempLinks = [] # for duplicate check in nodes with ids
-        tempIds = [] # for duplicate check in nodes with links because coauthors don't have ids
+        idx = 0  # index count
+        idx1 = 0  # index count
+        tempLinks = []  # for duplicate check in nodes with ids
+        tempIds = []  # for duplicate check in nodes with links because coauthors don't have ids
 
         for j in authorFullCopy['authors'][1:]:
 
@@ -916,7 +909,8 @@ def entity(request):
                 'degreeCentrality': 0,
                 'closenessCentrality': 0,
                 'betweennessCentrality': 0,
-                'eigenvectorCentrality': 0
+                'eigenvectorCentrality': 0,
+                'level': 0
             }
 
             tempNodes['id'] = str(j['_id'])
@@ -953,7 +947,6 @@ def entity(request):
                     oka = True
             color.append(thisColor)
 
-
         # color = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
         #          for i in range(len(number_of_colors))]
         print(color)
@@ -974,7 +967,8 @@ def entity(request):
                     'degreeCentrality': 0,
                     'closenessCentrality': 0,
                     'betweennessCentrality': 0,
-                    'eigenvectorCentrality': 0
+                    'eigenvectorCentrality': 0,
+                    'level': 0
                 }
                 tempLinksNodes = {
                     'source': '',
@@ -997,7 +991,7 @@ def entity(request):
                 tempLinksNodes['papaerLink'] = j['papaerLink']
                 tempLinksNodes['source'] = str(j['author'])
 
-                if k['linkUrl'] not in tempLinks: # if this is a coauthor
+                if k['linkUrl'] not in tempLinks:  # if this is a coauthor
 
                     tempNodes['id'] = str(idx1) + str(idx1) + str(idx1)
                     tempNodes['name'] = k['name']
@@ -1046,7 +1040,7 @@ def entity(request):
 
             match = 0
             tempid = 0
-            for j in newArrangement['subNetworks'][::-1]: # check if record already exists in one subnetwork
+            for j in newArrangement['subNetworks'][::-1]:  # check if record already exists in one subnetwork
                 # iter += 1
                 tempid = j['no_id']
                 if i['source'] in j['authors']:
@@ -1057,13 +1051,13 @@ def entity(request):
                     break
 
             tempArrangement = {
-                'no_id' : 0,
-                'authors' : [],
-                'coauthors' : [],
-                'relations' : [
+                'no_id': 0,
+                'authors': [],
+                'coauthors': [],
+                'relations': [
                     {
-                        'a_id' : '',
-                        'ca_id' : '',
+                        'a_id': '',
+                        'ca_id': '',
                         'distance': 0
                     }
                 ]
@@ -1076,7 +1070,7 @@ def entity(request):
                 'distance': i['value']
             }
             if match == 1:
-                #edit network tempid author
+                # edit network tempid author
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
                         if i['target'] not in j['coauthors']:
@@ -1085,7 +1079,7 @@ def entity(request):
                         break
 
             elif match == 2:
-                #edit network tempid coauthor
+                # edit network tempid coauthor
                 for j in newArrangement['subNetworks'][::-1]:
                     if j['no_id'] == tempid:
                         if i['source'] not in j['authors']:
@@ -1094,9 +1088,9 @@ def entity(request):
                         break
 
             else:
-                #save as new network with tempid += 1
+                # save as new network with tempid += 1
 
-                tempArrangement['no_id'] = len(newArrangement['subNetworks'])+1
+                tempArrangement['no_id'] = len(newArrangement['subNetworks']) + 1
                 tempArrangement['authors'].append(i['source'])
                 tempArrangement['coauthors'].append((i['target']))
                 tempArrangement['relations'].pop()
@@ -1162,10 +1156,11 @@ def entity(request):
 
         ######### code for the closeness and betweenness cardanility calculation begins here #########
 
-        fullAuthorId = [] # working for closeness centrality
-        fullAuthorNumbers = [] # working for closeness centrality
-        fullCoauthorId = [] # working for betweeneness centrality
-        fullCoauthorNumbers = [] # working for betweeneness centrality
+        fullAuthorId = []  # working for closeness centrality
+        fullAuthorNumbers = []  # working for closeness centrality
+        fullCoauthorId = []  # working for betweeneness centrality
+        fullCoauthorNumbers = []  # working for betweeneness centrality
+        shortestCoauthorLevel = [] # to know what is the level of the graph
 
         for i in newArrangement['subNetworks']:
 
@@ -1186,14 +1181,6 @@ def entity(request):
             # https://stackoverflow.com/questions/33469897/dfs-to-implement-a-graph-python
 
             graph = {}
-            # for j in totalNodes:
-            #     connections = []
-            #     for k in i['relations']:
-            #         if k['a_id'] == j:
-            #             connections.append(k['ca_id'])
-            #         elif k['ca_id'] == j:
-            #             connections.append(k['a_id'])
-            #     graph.update({j:connections})
 
             # graph example = {
             #   'A': ['B', 'C'],
@@ -1211,19 +1198,8 @@ def entity(request):
                     graph[j['a_id']].append(j['ca_id'])
             # print(len(graph))
 
-            # for j in totalNodes:
-            #     connections = []
-            #     for k in i['relations']:
-            #         if k['a_id'] == j: # if the person in j is an author
-            #             if k['ca_id'] not in connections:
-            #                 connections.append(k['ca_id'])
-            #         elif k['ca_id'] == j:
-            #             if k['a_id'] not in connections: # if the person in j is a coauthor
-            #                 connections.append(k['a_id'])
-            #     graph.update({j:connections})
-
-            allShortestPaths = [] # all shortest paths between 2 nodes
-            noOfShortestPaths = [] # e.g first element is 2 then first 2 lists in allShortestPaths are between same nodes
+            allShortestPaths = []  # all shortest paths between 2 nodes
+            noOfShortestPaths = []  # e.g first element is 2 then first 2 lists in allShortestPaths are between same nodes
 
             # pprint.pprint(graph)
             # print(graph)
@@ -1239,7 +1215,6 @@ def entity(request):
                 closenessCentralityOfJ = 0
 
                 print('Path from node: {} ({}/{})'.format(j, idx3, len(totalNodes)))
-
 
                 # find shortes path from j to j+1 and others except with itself
                 # for k in totalNodes[totalNodes.index(j)+1::]: # .index takes very much time to execute
@@ -1282,23 +1257,35 @@ def entity(request):
                         dfs(graph, currentStartNode, currentEndNode, [], result)
                         uniqueResults.append(result)
                     # sleep(0.25)
-                    print(result)
+                    # print(result)
 
-                    sleep(0.5)
+                    shortestConnectionLevel = [] # of coauthor with author
+                    # this will only run for author
+                    if currentStartNode in i['author'] and currentEndNode in i['coauthor']:
+                        if len(result) > 0: # if they are connected
+                            step = len(result[0])
+                            for l in result[1:len(result):]:
+                                if (len(l)) < step:
+                                    step = len(l)
+
+                            for l in authorReturnCopy['nodes']:
+                                if l['id'] == currentEndNode:
+                                    l['level'] = step
+
                     distances = []
                     shortestDistance = 0
                     noOfShortestDistances = 0
                     for l in result:
                         # for m in l[:len(l)-1:]:
-                        for idx4, m in enumerate(l[:len(l)-1:]):
+                        for idx4, m in enumerate(l[:len(l) - 1:]):
                             # nextM = l[l.index(m)+1]
-                            nextM = l[idx4+1] # .index takes very much execution time
+                            nextM = l[idx4 + 1]  # .index takes very much execution time
                             # distance between m and nextM
                             for o in i['relations']:
                                 if o['a_id'] == m and o['ca_id'] == nextM or o['a_id'] == nextM and o['ca_id'] == m:
                                     shortestDistance += o['distance']
                         distances.append(shortestDistance)
-                    shortestDistance = min(distances) # distance between j and k
+                    shortestDistance = min(distances)  # distance between j and k
 
                     for idx, l in enumerate(distances):
                         if l == shortestDistance:
@@ -1310,7 +1297,7 @@ def entity(request):
 
                 # print(sumOfDistanceOfAllNodesFromJ)
                 try:
-                    closenessCentralityOfJ = sumOfDistanceOfAllNodesFromJ/(len(totalNodes)-1)
+                    closenessCentralityOfJ = sumOfDistanceOfAllNodesFromJ / (len(totalNodes) - 1)
                 except:
                     # print('End of a Subnetwork {}'.format(i['authors']))
                     pass
@@ -1322,8 +1309,8 @@ def entity(request):
 
             for j in totalNodes:
                 # if '158215821582' == j:
-                    # print(allShortestPaths)
-                    # print(totalNodes)
+                # print(allShortestPaths)
+                # print(totalNodes)
 
                 betweennessOfJ = 0
                 inBetween = 0
@@ -1331,7 +1318,7 @@ def entity(request):
                 prevStartNode = ''
                 prevEndNode = ''
 
-                skip = True #skip due to not being in between
+                skip = True  # skip due to not being in between
                 hisAuthors = []
 
                 for k in authorReturnCopy['links']:
@@ -1356,15 +1343,15 @@ def entity(request):
 
                         totalPaths += 1
 
-                        if j in k[::]: #if j in between the path
+                        if j in k[::]:  # if j in between the path
                             inBetween += 1
 
                         # if '5cd9b2314c1c3a308240f938' == j: #zaid ahmed
                         #     print('{}, {}, {}, {}'.format(k, totalPaths, inBetween, betweennessOfJ))
 
                         if startNode != prevStartNode or endNode != prevEndNode:
-                            if idx != (len(allShortestPaths)-1):
-                                betweennessOfJ = betweennessOfJ + inBetween/totalPaths
+                            if idx != (len(allShortestPaths) - 1):
+                                betweennessOfJ = betweennessOfJ + inBetween / totalPaths
                             totalPaths = 0
                             inBetween = 0
 

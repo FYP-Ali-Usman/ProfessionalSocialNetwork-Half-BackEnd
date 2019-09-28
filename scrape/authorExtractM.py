@@ -99,6 +99,7 @@ def authProfileGet(startSearch):
 
 
 def getAuthInfoLink(name, university):
+    
     global startSearc
     global nameTo
     nameTo = name
@@ -187,7 +188,7 @@ def getCoauthInfo(tileLi, namee):
             current_time = now.strftime("%H:%M:%S")
             print("Ending time of getting coauthor Info =", current_time)
 
-            sleep(4)
+            sleep(3)
             soursou = newCoauthDriver.page_source
         except TimeoutException as ex:
             print('internet is slow, error occured in searching publication, trying again')
@@ -221,7 +222,7 @@ def getCoauthInfo(tileLi, namee):
                 current_time = now.strftime("%H:%M:%S")
                 print("Ending time of getting more button data of coauthor =", current_time)
 
-                sleep(3)
+                sleep(2)
             except NoSuchElementException:
                 print('retrying to click "see more button"')
                 if staleCounter >= 5:
@@ -385,7 +386,7 @@ def scrapProfile(lliik):
         current_time = now.strftime("%H:%M:%S")
         print("Ending time of getting next button data =", current_time)
 
-        sleep(3)
+        sleep(2)
         soursou = driver.page_source
 
         #######authgors
