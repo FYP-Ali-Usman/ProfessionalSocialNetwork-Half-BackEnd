@@ -45,6 +45,10 @@ nameTo = ''
 options = FirefoxOptions()
 options.add_argument("--headless")
 
+# driver = webdriver.Firefox(options=options,
+#                            executable_path=r'C:\\MyData\\semester 8\\FYP\\Python\\FYP\\operadriver.exe')
+#
+# newCoauthDriver = webdriver.Firefox(options=options, executable_path=r'C:\\MyData\\semester 8\\FYP\\Python\\FYP\\operadriver.exe')
 driver = webdriver.Firefox(options=options,
                            executable_path=r'C:\\MyData\\semester 8\\FYP\\Python\\FYP\\geckodriver.exe')
 
