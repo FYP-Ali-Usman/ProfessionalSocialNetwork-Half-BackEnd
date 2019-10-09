@@ -27,6 +27,12 @@ def load_words():
 
     return valid_words
 
+def missLeadingNames():
+    with open("./NotFounded_Words.txt") as word_file:
+        valid_words = set(word_file.read().split())
+
+    return valid_words
+
 # if __name__ == '__main__':
 #
 # # print('contact' in english_words)
@@ -276,10 +282,12 @@ def getAuthInfoLink(url, name, advanced = False):
 
     # TODO we can improve this dynamic scraping, if we keep record of finalreqlist before and after the records in our database, we can see which words it didn't consider name and we can add them in our exclusion list
 
+    wrongWords = missLeadingNames()
     for i in finalreqlist:
         if finalseqlist[finalreqlist.index(i)] == 'title':
             #print(finalseqlist[finalreqlist.index(i)]+ '   '+i)
-            authorExtractM.getAuthInfoLink(str(i), name)
+            if str(i).lower() not in wrongWords:
+                authorExtractM.getAuthInfoLink(str(i), name)
     if advanced:
         for i in finalreqlist:
             if finalseqlist[finalreqlist.index(i)] == 'title':
